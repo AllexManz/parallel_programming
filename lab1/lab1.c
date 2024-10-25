@@ -21,11 +21,10 @@ void sequential_find_max(int n, const int* array, int* max){
 
 
 int sequential_calculations(int n, int avg, int random_seed){
-    int* array = array_creation(n, random_seed);
-
     int max = -1;
     double time = 0.0, start, end;
     for (int iter = 0; iter < avg; iter++) {
+        int* array = array_creation(n, random_seed);
         max = -1;
 
         start = omp_get_wtime();
@@ -33,12 +32,12 @@ int sequential_calculations(int n, int avg, int random_seed){
         end = omp_get_wtime();
 
         time += end - start;
+        free(array);
     }
 
     time /= avg;
     printf("SEQUENTIAL TIME: %lf\n\n", time);
 
-    free(array);
     return max;
 }
 
@@ -83,7 +82,7 @@ int main(int argc, char** argv)
     printf("OpenMP: %d\n", _OPENMP);
     printf("threads_num: %d\n\n", omp_get_num_procs());
 
-    const int n_array = 1000000;         ///< Number of array elements
+    const int n_array = 10000000;         ///< Number of array elements
     const int avg = 10;                     ///< Number of calculations before
     const int random_seed = 920215;         ///< RNG seed
     int seq_max;                            ///< The maximal element for sequential algorithm
