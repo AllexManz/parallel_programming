@@ -57,10 +57,9 @@ void parallel_find_max(int n, int threads, const int* array, int* max){
 int parallel_time(int n, int avg, int random_seed){
     int max = -1;
     for (int threads = 2; threads <= omp_get_num_procs(); threads++) {
-        int* array = array_creation(n, random_seed);
-
         double time = 0.0, start, end;
         for (int i = 0; i < avg; i++) {
+            int* array = array_creation(n, random_seed);
             max = -1;
 
             start = omp_get_wtime();
@@ -68,12 +67,11 @@ int parallel_time(int n, int avg, int random_seed){
             end = omp_get_wtime();
 
             time += end - start;
+            free(array);
         }
 
         time /= avg;
         printf("PARALLEL (%d thr): TIME = %lf;\n", threads, time);
-
-        free(array);
     }
     return max;
 }
