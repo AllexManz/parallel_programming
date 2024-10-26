@@ -66,11 +66,16 @@ int parallel_find(int n, int threads, const int* array, int target){
     int index = -1;
     #pragma omp parallel num_threads(threads) shared(array, n, target, index) default(none)
     #pragma omp for
-    for (int i = 0; i < n; i++)
-        if (array[i] == target)
+    for (int i = 0; i < n; i++) {
+        if (array[i] == target) {
             #pragma omp critical
+            {
                 index = array[i];
-
+            }
+            #pragma omp cancel for
+        }
+        #pragma omp cancellation point for
+    }
     return index;
 }
 
@@ -143,16 +148,3 @@ int main(int argc, char** argv)
 
     return 0;
 }
-
-
-/*
-SEQUENTIAL TIME: 2.517700
-
-PARALLEL (2 thr): TIME = 1.191100;
-PARALLEL (3 thr): TIME = 0.892800;
-PARALLEL (4 thr): TIME = 0.643700;
-PARALLEL (5 thr): TIME = 0.586300;
-PARALLEL (6 thr): TIME = 0.481200;
-PARALLEL (7 thr): TIME = 0.449800;
-PARALLEL (8 thr): TIME = 0.401100;
-*/
