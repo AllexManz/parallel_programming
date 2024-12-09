@@ -3,6 +3,17 @@
 #include "omp.h"
 
 
+
+int power(int value, int power){
+    unsigned long long result = value;
+    for (int i = 0; i < power; i++){
+        result *= result;
+        result %= 131;
+    }
+    return (int) result;
+}
+
+
 int* array_creation(int length, int random_seed){
     int* array = (int*) calloc(length, sizeof(int));
 
@@ -10,6 +21,18 @@ int* array_creation(int length, int random_seed){
         (array)[i] = rand();
 
     return array;
+}
+
+
+int sequential_hard_find(int n, const int* array, int target){
+    int index = -1;
+    for (int i = 0; i < n; i++) {
+        if (power(array[i], 50) == target) {
+            index = i;
+            return index;
+        }
+    }
+    return index;
 }
 
 
@@ -33,7 +56,7 @@ void sequential_calculations(int n, int avg, int random_seed){
         int target = -1;
 
         start = omp_get_wtime();
-        sequential_find(n, array, target);
+        sequential_hard_find(n, array, target);
         end = omp_get_wtime();
 
         time += end - start;
@@ -50,7 +73,7 @@ void sequential_calculations(int n, int avg, int random_seed){
         int target = -1;
 
         start = omp_get_wtime();
-        sequential_find(n, array, target);
+        sequential_hard_find(n, array, target);
         end = omp_get_wtime();
 
         time += end - start;
@@ -80,6 +103,24 @@ int parallel_find(int n, int threads, const int* array, int target){
 }
 
 
+int parallel_max_find(int n, int threads, const int* array, int target){
+    int index = -1;
+#pragma omp parallel num_threads(threads) shared(array, n, target, index) default(none)
+#pragma omp for
+    for (int i = 0; i < n; i++) {
+        if (power(array[i], 50) == target) {
+#pragma omp critical
+            {
+                index = array[i];
+            }
+#pragma omp cancel for
+        }
+#pragma omp cancellation point for
+    }
+    return index;
+}
+
+
 void parallel_time(int n, int avg, int random_seed){
     for (int threads = 2; threads <= omp_get_num_procs(); threads++) {
         double time = 0.0, start, end;
@@ -89,7 +130,7 @@ void parallel_time(int n, int avg, int random_seed){
             int target = -1;
 
             start = omp_get_wtime();
-            parallel_find(n, threads, array, target);
+            parallel_max_find(n, threads, array, target);
             end = omp_get_wtime();
 
             time += end - start;
@@ -109,7 +150,7 @@ void parallel_time(int n, int avg, int random_seed){
             int target = -1;
 
             start = omp_get_wtime();
-            parallel_find(n, threads, array, target);
+            parallel_max_find(n, threads, array, target);
             end = omp_get_wtime();
 
             time += end - start;
